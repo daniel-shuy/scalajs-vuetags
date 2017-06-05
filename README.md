@@ -21,7 +21,7 @@ The current API looks like:
         v-for="item in groceryList"
         :key="item.id"
         :todo="item.text">
-      </todoItem>
+      </todo-item>
     </div>
   </body>
 </html>
@@ -96,8 +96,8 @@ new Vue(
   ComponentOptions
     .el("#vue")
     .render(
-      createElement =>
-        AnchoredHeading(createElement)(level:=1)(
+      implicit createElement =>
+        AnchoredHeading(level:=1)(
           span("Hello"), " world!"
         )
     )

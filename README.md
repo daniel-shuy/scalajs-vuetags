@@ -6,101 +6,135 @@ This project is still in the design phase. The API is still subject to constant 
 # Design
 A Scala.js Facade for Vue.js alone is not enough to provide typesafety to Vue.js, since its HTML templates are still not type safe, and we will not be able to use [JSX for Render Functions](https://vuejs.org/v2/guide/render-function.html#JSX) (requires Babel).
 
-Inspired by [ScalaTags](https://github.com/lihaoyi/scalatags), this framework aims to provide type safe Scala templates for Vue.js, for both HTML and Render Functions.
+Inspired by [ScalaTags](https://github.com/lihaoyi/scalatags), this framework aims to provide type safe Scala Render Function templates for Vue.js.
 
-The current API looks like:
-
-## HTML
-### Vue.js example 
-- from https://vuejs.org/v2/guide/index.html#Composing-with-Components
-```html
-<html>
-  <body>
-    <div id="vue">
-      <todo-item
-        v-for="item in groceryList"
-        :key="item.id"
-        :todo="item.text">
-      </todo-item>
-    </div>
-  </body>
-</html>
-```
-
-### ScalaTags
-```scala
-html(
-  body(
-    div(id:="vue")(
-      for ((item <- groceryList) yield TodoItem(key = item.id, todo = item.text))
-    )
-  )
-)
-```
-- We will not be able to use the := operator like ScalaTags, because we need to restrict the props that can be set on each component, which requires them to be method arguments instead.
-- Like ScalaTags, we want to keep the syntax as Scala-like as possible.
-
-### Play Framework (Twirl)
-```scala
-@(groceryList: List[Grocery])
-
-<html>
-  <body>
-    <div id="vue">
-      @for(item <- groceryList) {
-        @TodoItem(key = item.id, todo = item.text)
-      }
-    </div>
-  </body>
-</html>
-```
-
-
-## Render Functions (Scala.js)
-### Vue.js examples
+## Vue.js examples
 - from https://vuejs.org/v2/guide/render-function.html#JSX
 
-#### Without JSX
+### Without JSX
 ```javascript
 new Vue({
   el: '#vue',
-  render: function (createElement) {
-    return createElement('anchored-heading', {
-      props: {
-        level: 1
-      }
-    }, [
-      createElement('span', 'Hello'),
-      ' world!'
+  data: {
+    groceryList: [
+      'Vegetables',
+      'Cheese',
+      'Whatever else humans are supposed to eat'
     ]
-  )}
-})
-```
-
-#### With JSX
-```javascript
-new Vue({
-  el: '#vue',
-  render: function (h) {
-    <AnchoredHeading level={1}>
-      <span>Hello</span> world!
-    </AnchoredHeading>
+  },
+  render: function (createElement) {
+    return createElement('div',
+      this.groceryList.map(
+        function (item) {
+          return createElement('todo-item', {
+            props: {
+              todo: item
+            }
+          }
+        }
+      )
+    )
   }
 })
 ```
 
-### Scala.js
-```scala
-new Vue(
-  ComponentOptions
-    .el("#vue")
-    .render(
-      implicit createElement =>
-        AnchoredHeading(level = 1)(
-          span("Hello"), " world!"
-        )
-    )
-)
+### With JSX
+```javascript
+new Vue({
+  el: '#vue',
+  data: {
+    groceryList: [
+      'Vegetables',
+      'Cheese',
+      'Whatever else humans are supposed to eat'
+    ]
+  },
+  render: function (h) {
+    <div>
+      this.groceryList.map(
+        function (item) {
+          <TodoItem todo={item}></TodoItem>
+        }
+      )
+    </div>
+  }
+})
 ```
 
-Notice how similar both templates look. One of the aims for this project is to have the same syntax for both HTML and Render Function templates (so that you don't have to learn 2 different templates to use both).
+## Scala.js
+```scala
+trait Data {
+  val groceryList: Seq[String]
+}
+
+Vue("#vue", 
+  new Data {
+    val groceryList = Seq(
+      'Vegetables',
+      'Cheese',
+      'Whatever else humans are supposed to eat'
+    )
+  },
+  vm =>
+    implicit createElement =>
+      div(
+        vm.$data.groceryList.map(
+          item =>
+            TodoItem(todo = item)
+        )
+      )
+)
+```
+- Having to implicitly pass CreateElement is a performance tradeoff so that each Component can immediately execute the passed CreateElement to return a VNode up the call chain, rather than having each Render Function aggregate nested Render Functions.
+
+# Notes
+
+Initially, a type safe Scala template that compiles to Vue.js' HTML template was also planned; however, this is extremely difficult to implement, and is actually slower than using purely Scala.js templates (because Vue.js would still need to compile the HTML template to Render Functions). Also, being able to leverage the full power of Scala.js in templates beats using directives in HTML (eg. we can use Scala.js' for loops instead of Vue's `v-for` directive).
+
+How some previous ideas looked like:
+
+```scala
+MyVue(vm =>
+  vFor(vm.$data.groceryList, item =>
+    ToDoItem(key = item.id, todo = item.text)
+  )
+)
+```
+which would compile to:
+```html
+<html>
+  <body>
+    <div id="vue">
+      <template v-for="_vfor1 in $data.groceryList">
+        <todo-item
+          :key="_vfor1.id"
+          :todo="_vfor1.text">
+        </todo-item>
+      </template>
+    </div>
+  </body>
+</html>
+```
+- The key name (in this case, `_vfor1`) would be a unique name generated by MyVue, so that it will not clash with any of MyVue's field names, or key names from other directives (eg. other `v-for`s).
+- The main issue was being able to reference and typecheck all nested fields of the parent, and still at the same time be able to convert the fields to a String (eg. the field name).
+- One of the ideas was to use macros to generate an Inner Class for each Vue/Component, with identical field names as the Vue/Component, eg.
+```scala
+@Vue(data)
+class MyVue {
+  // ...
+}
+```
+which then expands to:
+```scala
+class MyVue extends Vue[MyData](data) {
+  // ...
+}
+
+object MyVue {
+  def apply(children: (Vue.HTMLTemplate => Component)*) = ???
+  
+  class HTMLTemplate extends Vue.HTMLTemplate {
+    val $data: String = "$data" // however, we need $data to be MyData type for type safety and to access $data's fields
+  }
+}
+```

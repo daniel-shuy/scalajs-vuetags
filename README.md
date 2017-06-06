@@ -32,12 +32,13 @@ The current API looks like:
 html(
   body(
     div(id:="vue")(
-      for ((item <- groceryList) yield TodoItem(key:=item.id, todo:=item.text))
+      for ((item <- groceryList) yield TodoItem(key = item.id, todo = item.text))
     )
   )
 )
 ```
-- __Note__: This may be spun-off into a separate library/plugin
+- We will not be able to use the := operator like ScalaTags, because we need to restrict the props that can be set on each component, which requires them to be method arguments instead.
+- Like ScalaTags, we want to keep the syntax as Scala-like as possible.
 
 ### Play Framework (Twirl)
 ```scala
@@ -47,7 +48,7 @@ html(
   <body>
     <div id="vue">
       @for(item <- groceryList) {
-        @TodoItem(key:=item.id, todo:=item.text)
+        @TodoItem(key = item.id, todo = item.text)
       }
     </div>
   </body>
@@ -64,17 +65,15 @@ html(
 new Vue({
   el: '#vue',
   render: function (createElement) {
-    return createElement('anchored-heading', 
-      {
-        props: {
-          level: 1
-        }
-      }, [
-        createElement('span', 'Hello'),
-        ' world!'
-      ]
-    )
-  }
+    return createElement('anchored-heading', {
+      props: {
+        level: 1
+      }
+    }, [
+      createElement('span', 'Hello'),
+      ' world!'
+    ]
+  )}
 })
 ```
 
@@ -97,11 +96,11 @@ new Vue(
     .el("#vue")
     .render(
       implicit createElement =>
-        AnchoredHeading(level:=1)(
+        AnchoredHeading(level = 1)(
           span("Hello"), " world!"
         )
     )
 )
 ```
 
-Notice how similar both templates look. One of the aims for this project is to have the same syntax for both HTML and Render Function templates.
+Notice how similar both templates look. One of the aims for this project is to have the same syntax for both HTML and Render Function templates (so that you don't have to learn 2 different templates to use both).

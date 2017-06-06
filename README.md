@@ -9,8 +9,6 @@ A Scala.js Facade for Vue.js alone is not enough to provide typesafety to Vue.js
 Inspired by [ScalaTags](https://github.com/lihaoyi/scalatags), this framework aims to provide type safe Scala Render Function templates for Vue.js.
 
 ## Vue.js examples
-- from https://vuejs.org/v2/guide/render-function.html#JSX
-
 ### Without JSX
 ```javascript
 new Vue({

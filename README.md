@@ -68,9 +68,9 @@ trait Data {
 Vue("#vue", 
   new Data {
     val groceryList = Seq(
-      'Vegetables',
-      'Cheese',
-      'Whatever else humans are supposed to eat'
+      "Vegetables",
+      "Cheese",
+      "Whatever else humans are supposed to eat"
     )
   },
   vm =>

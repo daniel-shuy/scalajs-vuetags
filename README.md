@@ -3,6 +3,8 @@ Type safe Scala templates for Vue.js
 
 This project is still in the design phase and will likely remain so until [scala.macros](https://github.com/scalacenter/macros) is more mature, as this project will heavily depend on macros to bridge Scala's strong static type system and JavaScript's weak dynamic type system.
 
+Another alternative that I've been considering is to create a Scala.js web framework that doesn't rely on any JavaScript framework, which will likely offer better performance (eg. with Scala.js, it may be possible to perform [Prop Validation](https://vuejs.org/v2/guide/components.html#Prop-Validation) during compile time with static typing and [Refined Types](https://github.com/fthomas/refined), instead of at runtime).
+
 # Design
 A Scala.js Facade for Vue.js alone is not enough to provide typesafety to Vue.js, since its HTML templates are still not type safe, and we will not be able to use [JSX for Render Functions](https://vuejs.org/v2/guide/render-function.html#JSX) (requires Babel).
 

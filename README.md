@@ -1,7 +1,7 @@
 # scalajs-vuetags
 Type safe Scala templates for Vue.js
 
-This project is still in the design phase. The API is still subject to constant changes, and is extremely depedendant on how the design for [scalajs-vue-facade](https://github.com/daniel-shuy/scalajs-vue-facade) turns out.
+This project is still in the design phase and will likely remain so until [scala.macros](https://github.com/scalacenter/macros) is more mature, as this project will heavily depend on macros to bridge Scala's strong static type system and JavaScript's weak dynamic type system.
 
 # Design
 A Scala.js Facade for Vue.js alone is not enough to provide typesafety to Vue.js, since its HTML templates are still not type safe, and we will not be able to use [JSX for Render Functions](https://vuejs.org/v2/guide/render-function.html#JSX) (requires Babel).
